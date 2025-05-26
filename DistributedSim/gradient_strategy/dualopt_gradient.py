@@ -44,9 +44,9 @@ class DualOptGradient(GradientStrategy):
         for param in self.model.parameters():
             broadcast(param.data, src=0)
 
-    def _set_master_grad_from_diff(self, before_params):
-        for param, before in zip(self.master_model.parameters(), before_params):
-            param.grad = before - param.data
+    def _set_master_grad(self) -> None:
+        for name, param in self.master_model.named_parameters():
+            param.grad = param.data - self.model.state_dict()[name].data.to("cpu")
 
     def _synchronize_master_model(self) -> None:
         for name, param in self.model.named_parameters():
@@ -61,26 +61,18 @@ class DualOptGradient(GradientStrategy):
         # Local (inner) step
         self.optim.step()
 
-        # At the end of the interval, update master model using diff or just step
         if (
             self.local_step % self.gradient_config.diloco_interval == 0
             and self.local_step > 0
         ):
+            self._set_master_grad()
+            self._average_models()
+
             if self.rank == 0:
                 self.outer_optimizer.zero_grad()
-                if self.use_diff_for_outer:
-                    self._set_master_grad_from_diff(self._master_params_before)
-                # If not using diff, just step with whatever gradients are currently set (could be None)
                 self.outer_optimizer.step()
-                # Update snapshot for next interval
-                self._master_params_before = [
-                    p.data.clone() for p in self.master_model.parameters()
-                ]
-                # Synchronize master model to local model
                 self._synchronize_master_model()
 
-            # Average and broadcast updated master model
-            self._average_models()
             self._broadcast_model_params()
 
         super().step()
