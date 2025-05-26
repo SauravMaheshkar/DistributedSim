@@ -65,14 +65,13 @@ class DualOptGradient(GradientStrategy):
             self.local_step % self.gradient_config.diloco_interval == 0
             and self.local_step > 0
         ):
-            self._set_master_grad()
-            self._average_models()
-
             if self.rank == 0:
+                self._set_master_grad()
                 self.outer_optimizer.zero_grad()
                 self.outer_optimizer.step()
                 self._synchronize_master_model()
 
+            self._average_models()
             self._broadcast_model_params()
 
         super().step()

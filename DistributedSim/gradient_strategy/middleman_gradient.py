@@ -53,6 +53,7 @@ class MiddleManGradient(GradientStrategy):
         if not self._midstep_done and (self.local_step % interval == interval // 2):
             if self.rank == 0:
                 self.outer_optimizer.zero_grad()
+                self._set_master_grad()
                 self.outer_optimizer.step()
                 self._synchronize_master_model()
             self._broadcast_model_params()
