@@ -140,7 +140,7 @@ def main():
     config.gradient_config.H = args.H
     config.gradient_config.island_size = args.island_size
 
-    config.gradient_config.optimizer_cls = Lookahead
+    config.gradient_config.optimizer_class = Lookahead
     config.gradient_config.optimizer_kwargs = {
         "optimizer": torch.optim.SGD,
         "la_steps": 5,
