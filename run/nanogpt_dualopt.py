@@ -14,7 +14,6 @@ def main():
     parser.add_argument("--diloco_interval", type=int, default=100)
     parser.add_argument("--outer_lr", type=float, default=0.7)
     parser.add_argument("--nesterov", type=bool, default=True)
-    parser.add_argument("--use_diff_for_outer", type=bool, default=True)
     parser.add_argument("--outer_momentum", type=float, default=0.9)
 
     args = parser.parse_args()
@@ -31,7 +30,6 @@ def main():
         "nesterov": args.nesterov,
         "momentum": args.outer_momentum,
     }
-    config.gradient_config.use_diff_for_outer = args.use_diff_for_outer
 
     simbuilder = LocalSimBuilder(config)
 
