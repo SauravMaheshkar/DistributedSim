@@ -11,6 +11,11 @@ class DualOptGradient(GradientStrategy):
     def __init__(self, rank, model, config, logger=None):
         super().__init__(rank, model, config, logger)
 
+        # Add a flag to control whether to use diff or just take gradients as is
+        self.use_diff_for_outer = getattr(
+            self.gradient_config, "use_diff_for_outer", True
+        )
+
         if self.rank == 0:
             self.master_model = deepcopy(model).to("cpu")
             for param in self.master_model.parameters():
@@ -56,15 +61,16 @@ class DualOptGradient(GradientStrategy):
         # Local (inner) step
         self.optim.step()
 
-        # At the end of the interval, update master model using diff
+        # At the end of the interval, update master model using diff or just step
         if (
             self.local_step % self.gradient_config.diloco_interval == 0
             and self.local_step > 0
         ):
             if self.rank == 0:
-                # Compute gradient as difference between before and after local steps
                 self.outer_optimizer.zero_grad()
-                self._set_master_grad_from_diff(self._master_params_before)
+                if self.use_diff_for_outer:
+                    self._set_master_grad_from_diff(self._master_params_before)
+                # If not using diff, just step with whatever gradients are currently set (could be None)
                 self.outer_optimizer.step()
                 # Update snapshot for next interval
                 self._master_params_before = [
