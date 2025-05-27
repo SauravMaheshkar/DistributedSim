@@ -4,6 +4,7 @@ from nanogpt import arg_parse, config_gen, gen_gpt_config
 from DistributedSim.dataset.nanogpt.build_dataset import *
 from DistributedSim.gradient_strategy.federated_averaging_lookahead import (
     FedAvgLookaheadGradient,
+    Lookahead,
 )
 from DistributedSim.gradient_strategy.gradient_strategy import *
 from DistributedSim.sim_builder import *
