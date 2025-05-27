@@ -25,8 +25,6 @@ class FedAvgGlobalLookaheadGradient(GradientStrategy):
                 **self.gradient_config.outer_optimizer_kwargs,
             )
 
-        self.old_master_state = {}
-
         self.optim = self.gradient_config.optimizer_class(
             model.parameters(), **self.gradient_config.optimizer_kwargs
         )
