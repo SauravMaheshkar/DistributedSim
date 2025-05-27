@@ -1,5 +1,3 @@
-from copy import deepcopy
-
 import torch.distributed as dist
 from torch.nn import utils as nn_utils
 
@@ -19,10 +17,10 @@ class DualOptGradient(GradientStrategy):
         for name, param in self.model.named_parameters():
             self.saved_model_state[name] = param.data.clone().cpu()
 
-        if self.rank == 0:
-            self.master_model = deepcopy(model).cpu()
-            for param in self.master_model.parameters():
-                param.requires_grad = True
+        # if self.rank == 0:
+        #     self.master_model = deepcopy(model).cpu()
+        #     for param in self.master_model.parameters():
+        #         param.requires_grad = True
 
         self.optim = self.gradient_config.optimizer_class(
             model.parameters(), **self.gradient_config.optimizer_kwargs
@@ -68,13 +66,12 @@ class DualOptGradient(GradientStrategy):
             self.local_step % self.gradient_config.diloco_interval == 0
             and self.local_step > 0
         ):
-            if self.rank == 0:
-                self.outer_optimizer.zero_grad()
-                self._set_local_grad()
-                self.outer_optimizer.step()
+            self._set_local_grad()
+            self.outer_optimizer.zero_grad()
+            self.outer_optimizer.step()
 
-            self._average_models()
-            self._broadcast_model_params()
+            # self._average_models()
+            # self._broadcast_model_params()
             self._update_saved_state()
 
         super().step()
