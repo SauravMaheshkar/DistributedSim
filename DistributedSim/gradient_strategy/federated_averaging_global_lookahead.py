@@ -16,6 +16,7 @@ class FedAvgGlobalLookaheadGradient(GradientStrategy):
             for param in self.master_model.parameters():
                 param.requires_grad = True
 
+            self.old_master_state = {}
             for name, param in self.master_model.named_parameters():
                 self.old_master_state[name] = param.data.clone().cpu()
 
