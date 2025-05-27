@@ -29,7 +29,7 @@ def main():
 
     config.gradient_config.optimizer_class = Lookahead
     config.gradient_config.optimizer_kwargs = {
-        "la_steps": 5,
+        "la_steps": args.H,
         "la_alpha": 0.8,
         "pullback_momentum": "none",
     }
