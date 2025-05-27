@@ -17,11 +17,6 @@ class DualOptGradient(GradientStrategy):
         for name, param in self.model.named_parameters():
             self.saved_model_state[name] = param.data.clone().cpu()
 
-        # if self.rank == 0:
-        #     self.master_model = deepcopy(model).cpu()
-        #     for param in self.master_model.parameters():
-        #         param.requires_grad = True
-
         self.optim = self.gradient_config.optimizer_class(
             model.parameters(), **self.gradient_config.optimizer_kwargs
         )
@@ -70,8 +65,8 @@ class DualOptGradient(GradientStrategy):
             self.outer_optimizer.zero_grad()
             self.outer_optimizer.step()
 
-            # self._average_models()
-            # self._broadcast_model_params()
+            self._average_models()
+            self._broadcast_model_params()
             self._update_saved_state()
 
         super().step()
