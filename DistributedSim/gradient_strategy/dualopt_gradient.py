@@ -1,5 +1,8 @@
+import math
+
 import torch.distributed as dist
 from torch.nn import utils as nn_utils
+from torch.optim.lr_scheduler import LambdaLR
 
 from .communicate import all_reduce, broadcast
 from .gradient_strategy import GradientStrategy
@@ -27,6 +30,30 @@ class DualOptGradient(GradientStrategy):
         )
 
         self._setup_scheduler()
+
+    def _setup_scheduler(self):
+        def lr_lambda(current_step):
+            if current_step < self.gradient_config.warmup_steps:
+                return float(current_step) / float(
+                    max(self.gradient_config.warmup_steps, 1)
+                )
+            elif self.gradient_config.cosine_anneal:
+                min_lr_factor = 0.1
+                progress = (current_step - self.gradient_config.warmup_steps) / float(
+                    max(
+                        1,
+                        self.gradient_config.max_local_steps
+                        - self.gradient_config.warmup_steps,
+                    )
+                )
+                cosine_term = 0.5 * (1.0 + math.cos(math.pi * progress))
+                return (1 - min_lr_factor) * cosine_term + min_lr_factor
+            else:
+                return 1.0
+
+        if self.gradient_config.lr_scheduler == "lambda_cosine":
+            self.scheduler = LambdaLR(self.optim, lr_lambda)
+            self.outer_scheduler = LambdaLR(self.outer_optimizer, lr_lambda)
 
     def _set_local_grad(self):
         """Compute gradients as difference between current local model and saved state"""
@@ -64,6 +91,9 @@ class DualOptGradient(GradientStrategy):
             self._set_local_grad()
             self.outer_optimizer.zero_grad()
             self.outer_optimizer.step()
+
+            if self.outer_scheduler is not None:
+                self.outer_scheduler.step()
 
             self._average_models()
             self._broadcast_model_params()
