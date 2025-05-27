@@ -23,7 +23,7 @@ def main():
     config = config_gen(args, gpt_config)
 
     config.gradient_class = DualOptGradient
-    config.gradient_config.diloco_interval = args.max_steps
+    config.gradient_config.diloco_interval = args.diloco_interval
     config.gradient_config.outer_optimizer_cls = torch.optim.SGD
     config.gradient_config.outer_optimizer_kwargs = {
         "lr": args.outer_lr,
