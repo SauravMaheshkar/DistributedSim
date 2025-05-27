@@ -2,7 +2,9 @@ import torch
 from nanogpt import arg_parse, config_gen, gen_gpt_config
 
 from DistributedSim.dataset.nanogpt.build_dataset import *
-from DistributedSim.gradient_strategy.federated_averaging_lookahead import *
+from DistributedSim.gradient_strategy.federated_averaging_lookahead import (
+    FedAvgLookaheadGradient,
+)
 from DistributedSim.gradient_strategy.gradient_strategy import *
 from DistributedSim.sim_builder import *
 from DistributedSim.sim_config import *
@@ -23,7 +25,7 @@ def main():
 
     config = config_gen(args, gpt_config)
 
-    config.gradient_class = FedAvgGradient
+    config.gradient_class = FedAvgLookaheadGradient
     config.gradient_config.H = args.H
     config.gradient_config.island_size = args.island_size
 

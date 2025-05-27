@@ -31,6 +31,7 @@ class Lookahead(torch.optim.Optimizer):
         self._la_step = 0  # counter for inner optimizer
         self.la_alpha = la_alpha
         self._total_la_steps = la_steps
+        print(f"Lookahead steps: {la_steps}")
         pullback_momentum = pullback_momentum.lower()
         assert pullback_momentum in ["reset", "pullback", "none"]
         self.pullback_momentum = pullback_momentum
@@ -125,7 +126,7 @@ class Lookahead(torch.optim.Optimizer):
         return loss
 
 
-class FedAvgGradient(GradientStrategy):
+class FedAvgLookaheadGradient(GradientStrategy):
     def __init__(self, rank, model, config, logger=None):
         super().__init__(rank, model, config, logger)
 
