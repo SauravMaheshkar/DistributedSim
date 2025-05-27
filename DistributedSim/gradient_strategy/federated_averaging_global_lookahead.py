@@ -16,14 +16,15 @@ class FedAvgGlobalLookaheadGradient(GradientStrategy):
             for param in self.master_model.parameters():
                 param.requires_grad = True
 
+            for name, param in self.master_model.named_parameters():
+                self.old_master_state[name] = param.data.clone().cpu()
+
             self.outer_optimizer = self.gradient_config.outer_optimizer_cls(
                 self.master_model.parameters(),
                 **self.gradient_config.outer_optimizer_kwargs,
             )
 
         self.old_master_state = {}
-        for name, param in self.master_model.named_parameters():
-            self.old_master_state[name] = param.data.clone().cpu()
 
         self.optim = self.gradient_config.optimizer_class(
             model.parameters(), **self.gradient_config.optimizer_kwargs
